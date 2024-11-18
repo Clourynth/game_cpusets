@@ -29,10 +29,23 @@ DEFAULT_FOREGROUND=$(cat /dev/cpuset/foreground/cpus)
 GAME_TOP_APP="4-7"
 GAME_FOREGROUND="0-4"
 
+# Governor default
+DEFAULT_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+
+# Governor performance
+GAME_GOVERNOR="performance"
+
 # Function to set cpusets
 set_cpusets() {
     echo "$1" > /dev/cpuset/top-app/cpus
     echo "$2" > /dev/cpuset/foreground/cpus
+}
+
+# Function to set governor
+set_governor() {
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo "$1" > "$cpu"
+    done
 }
 
 # Fungsi untuk mengembalikan konfigurasi default
@@ -41,7 +54,14 @@ reset_cpusets() {
     echo "$DEFAULT_FOREGROUND" > /dev/cpuset/foreground/cpus
 }
 
-# Monitor dan atur cpusets
+# Fungsi untuk mengembalikan governor default
+reset_governor() {
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        echo "$DEFAULT_GOVERNOR" > "$cpu"
+    done
+}
+
+# Monitor dan atur cpusets serta governor
 while true; do
     # Ambil nama aplikasi yang sedang berjalan
     TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
@@ -49,9 +69,11 @@ while true; do
     # Jika aplikasi dalam config adalah game, gunakan pengaturan khusus game
     if grep -q "$TOP_APP" "$CONFIG_FILE"; then
         set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
+        set_governor "$GAME_GOVERNOR"
     else
         # Jika bukan game, kembalikan ke pengaturan default
         reset_cpusets
+        reset_governor
     fi
 
     # Tunggu sebelum iterasi berikutnya

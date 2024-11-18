@@ -5,7 +5,7 @@
 
 This module optimizes CPU scheduling to deliver a smoother and more stable gaming experience on Android devices. By detecting compatible CPU cluster configurations, it ensures your device runs efficiently while focusing on performance for gaming.  
 
-With this module, games will no longer rely on slow CPU cores, preventing bottlenecks that can cause frame drops throughout your gaming session.
+With this module, games will no longer rely on slow CPU cores and set CPU frequency to the maximum, preventing bottlenecks that can cause frame drops throughout your gaming session.
 
 Unlike many other gaming modules, this module does not rely on placebo effects; it provides a real and measurable FPS increase (you can check the tested devices and benchmark results near the bottom of the page)
 
