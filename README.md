@@ -12,9 +12,12 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 ---
 
 ## **Features**  
-- Supports devices with **4+4 CPU cluster configurations**.  
-- Utilizes **Cpuset** for efficient CPU task scheduling.  
-- Easy customization of game lists for targeted optimization.  
+- Immediate effect and simple to use.
+- Enhances gaming performance for smoother gameplay, especially on older CPU architectures like Cortex-A53 and Cortex-A73.
+- Provides more consistent performance during long gaming sessions. (Pair this module with thermal mods module to achieve this).
+- Improves responsiveness for a better gaming experience.
+
+ 
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  
@@ -68,7 +71,7 @@ Note: Both games were downscaled to 0.5x for proper CPU benchmarking, ensuring t
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for more details.  
 
 ## **Contributions**  
-Contributions are welcome! If you have suggestions, bug fixes, or new feature ideas, feel free to submit a **pull request** or report issues in the [Issues](#) section.  
+Contributions are welcome! If you have suggestions, bug fixes, or new feature ideas, feel free to submit a **pull request** or report issues in the [Issues](https://github.com/Clourynth/game_cpusets/issues) section.  
 
 ## **Credits**  
 - **Magisk:** A powerful systemless interface for Android that allows you to modify your system without altering the system partition.
