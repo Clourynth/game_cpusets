@@ -17,7 +17,7 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 - Easy customization of game lists for targeted optimization.  
 
 ## **Requirements**  
-- **Magisk Manager** Minimum v24.0+.  
+- **Magisk Manager** version 24.0 or higher required.  
 - Android device with a **4+4 CPU cluster configuration**.  
 - Kernel support for **Cpuset**.  
 
