@@ -1,0 +1,8 @@
+# config/game_list.txt
+
+# Add game package names below:
+com.miHoYo.GenshinImpact
+com.tencent.ig
+com.mobile.legends
+com.mojang.minecraftpe
+com.supercell.squad
