@@ -14,7 +14,7 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 ## **Features**  
 - Immediate effect and simple to use.
 - Freedom to select which games the optimizations apply to. 
-- The optimization takes effect only during gameplay and reverts to default settings when the game is closed to save battery.
+- The optimization takes effect only during gameplay and reverts to default settings when not in a game to save battery.
 - Enhances gaming performance for smoother gameplay, especially on older CPU architectures like Cortex-A53 and Cortex-A73.
 - Provides more consistent performance during long gaming sessions. (Pair this module with thermal mods module to achieve this).
 - Improves responsiveness for a better gaming experience.
