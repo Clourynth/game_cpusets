@@ -16,8 +16,6 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 - Utilizes **Cpuset** for efficient CPU task scheduling.  
 - Easy customization of game lists for targeted optimization.  
 
----
-
 ## **Requirements**  
 - **Magisk Manager** Minimum v24.0+.  
 - Android device with a **4+4 CPU cluster configuration**.  
@@ -34,13 +32,11 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
    - Select the downloaded ZIP file.  
 3. Reboot your device.  
 
----
-
 ## **Adding Games to the List**  
 
 1. After installation, locate the `game_list.txt` file in:  
   ```
-  /storage/emulated/0/config/game_list.txt
+  /storage/emulated/0/game_list.txt
   ```
 2. Add the **package IDs** of the games you want to optimize, one per line.  
 - Example:  
@@ -62,20 +58,17 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 ## Benchmark Results
 
 - **Minecraft**: Increased from 30 fps to 45 fps.
-- **Squad Busters**: Improved from 40 fps to stable performance to at 60 fps.
+- **Squad Busters**: Improved from 40 fps to stable performance at 60 fps.
 
 Note: Both games were downscaled to 0.5x for proper CPU benchmarking, ensuring the performance improvements are clearly noticeable.
 
+---
 
 ## **License**  
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for more details.  
 
----
-
 ## **Contributions**  
 Contributions are welcome! If you have suggestions, bug fixes, or new feature ideas, feel free to submit a **pull request** or report issues in the [Issues](#) section.  
-
----
 
 ## **Credits**  
 - **Magisk:** A powerful systemless interface for Android that allows you to modify your system without altering the system partition.
@@ -83,8 +76,6 @@ Magisk GitHub
 
 - **AOSP (Android Open Source Project):** The open-source initiative that forms the foundation of Android.
 AOSP GitHub
-
----
 
 ## **Support the Developer**  
 If you find this module helpful, consider supporting its development by donating:  
