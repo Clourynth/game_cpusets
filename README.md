@@ -7,18 +7,19 @@ This module optimizes CPU scheduling to deliver a smoother and more stable gamin
 
 With this module, games will no longer rely on slow CPU cores, preventing bottlenecks that can cause frame drops throughout your gaming session.
 
+Unlike many other gaming modules, this module does not rely on placebo effects; it provides a real and measurable FPS increase (you can check the tested devices and benchmark results near the bottom of the page)
+
 ---
 
 ## **Features**  
 - Supports devices with **4+4 CPU cluster configurations**.  
 - Utilizes **Cpuset** for efficient CPU task scheduling.  
 - Easy customization of game lists for targeted optimization.  
-- Non-intrusive Magisk-based module that doesn’t modify system partitions.  
 
 ---
 
 ## **Requirements**  
-- **Magisk Manager** (latest version recommended).  
+- **Magisk Manager** Minimum v24.0+.  
 - Android device with a **4+4 CPU cluster configuration**.  
 - Kernel support for **Cpuset**.  
 
@@ -48,16 +49,23 @@ With this module, games will no longer rely on slow CPU cores, preventing bottle
   com.tencent.ig
   com.supercell.clashofclans
   ```  
-3. Save the file and reboot your device to apply the changes.  
+3. Save the file and reboot your device to apply the changes.   
 
 ---
 
-## **Notes**  
-- This module only works with devices using a **4+4 CPU cluster configuration**.  
-- This module works only on devices/kernel with **Cpuset** supported'
-- Installation will fail if your device uses a different configuration.  
+## Tested on
 
----
+- **Device:** Redmi Note 5 Pro
+- **Processor:** Snapdragon 636
+- **Custom ROM:** Derpfest Android 12L
+
+## Benchmark Results
+
+- **Minecraft**: Increased from 30 fps to 45 fps.
+- **Squad Busters**: Improved from 40 fps to stable performance to at 60 fps.
+
+Note: Both games were downscaled to 0.5x for proper CPU benchmarking, ensuring the performance improvements are clearly noticeable.
+
 
 ## **License**  
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for more details.  
@@ -70,8 +78,11 @@ Contributions are welcome! If you have suggestions, bug fixes, or new feature id
 ---
 
 ## **Credits**  
-- **Developer:** Clourynth  
-- **Inspiration & Resources:** Open Source Community  
+- **Magisk:** A powerful systemless interface for Android that allows you to modify your system without altering the system partition.
+Magisk GitHub
+
+- **AOSP (Android Open Source Project):** The open-source initiative that forms the foundation of Android.
+AOSP GitHub
 
 ---
 
