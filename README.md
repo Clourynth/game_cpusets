@@ -19,7 +19,8 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 - Provides more consistent performance during long gaming sessions. (Pair this module with thermal mods module to achieve this).
 - Improves responsiveness for a better gaming experience.
 
- 
+ ## **Notes**  
+This module will override changes made by other modules or the built-in OS performance mode to CPU sets, frequency, and governor settings.
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  

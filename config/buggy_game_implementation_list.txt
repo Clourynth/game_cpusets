@@ -1,0 +1,6 @@
+# config/buggy_game_implementation_list.txt
+
+# Notes: This is a workaround for games that overwrite CPU frequency during launch, you must add game to config_game.txt too.
+# Please report issue on repo if you found buggy game like this.
+# Add game package names below:
+com.devsisters.ck
