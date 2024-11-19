@@ -20,7 +20,9 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 - Improves responsiveness for a better gaming experience.
 
  ## **Notes**  
-This module will override changes made by other modules, apps or the built-in OS performance/battery saver mode to CPU sets, CPU & GPU frequency, and CPU governor settings.
+- This module will override changes made by other modules, applications, or the built-in OS performance or battery saver mode, including CPU sets, CPU and GPU frequencies, and CPU governor settings.
+- This module may reduce CPU scores in synthetic benchmark applications like AnTuTu or Geekbench, as these applications benchmark all cores, including the less powerful little cores that are not optimized for gaming.
+- This module will also cause the device to heat up quickly and consume more power while gaming. However, when not playing games, it will not significantly affect power consumption.
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  
