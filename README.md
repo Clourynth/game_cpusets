@@ -49,9 +49,9 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
   com.miHoYo.GenshinImpact
   com.tencent.ig
   com.supercell.clashofclans
-  ```  
-3. Save the file and reboot your device to apply the changes.   
-
+  ```
+3. Save the file, then open your game. The changes will take effect immediately.
+   
 ---
 
 ## Tested on
