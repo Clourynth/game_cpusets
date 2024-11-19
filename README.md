@@ -33,7 +33,7 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 
 ## **Installation Instructions**  
 
-1. Download the ZIP file from the [latest release](https://github.com/Clourynth/game_cpusets/releases/download/v0.2/game_cpusets.zip).  
+1. Download the ZIP file from the [latest release](https://github.com/Clourynth/game_cpusets/releases/download/v0.4/game_cpusets.zip).  
 2. Install the module via **Magisk Manager**:  
    - Open Magisk Manager.  
    - Navigate to *Modules > Install from Storage*.  
