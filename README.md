@@ -1,13 +1,27 @@
-# **Force CPU Performance Core for Gaming**  
+# **Game CPUsets Magisk Module**  
 
 ![Magisk Module](https://img.shields.io/badge/Magisk-Module-blue?logo=android)  
 ![MIT License](https://img.shields.io/badge/License-MIT-green)  
 
-This module optimizes CPU scheduling to deliver a smoother and more stable gaming experience on Android devices. By detecting compatible CPU cluster configurations, it ensures your device runs efficiently while focusing on performance for gaming.  
+This module configure cpuset to only use bigcore in games to deliver a higher fps. games will no longer rely on slow CPU cores and set CPU frequency to the maximum, preventing bottlenecks that can cause frame drops.
 
-With this module, games will no longer rely on slow CPU cores and set CPU frequency to the maximum, preventing bottlenecks that can cause frame drops throughout your gaming session.
+Unlike many other gaming modules, this module does not rely on placebo effects; it provides a real and measurable FPS increase
 
-Unlike many other gaming modules, this module does not rely on placebo effects; it provides a real and measurable FPS increase (you can check the tested devices and benchmark results near the bottom of the page)
+---
+
+## FPS Performance: Before vs After Using Game CPUsets 
+
+Below is a comparison of FPS performance before and after enabling the Game CPUsets module:
+
+### Before Using Game CPUsets 
+*Default core affinity configuration on Minecraft. The little core bottlenecking the peformance resulting in lower framerate.*
+
+![Before](https://i.imgur.com/pc4qpow.png)
+
+### After Using Game CPUsets 
+*Big core only affinity on minecraft (using this module)*, FPS improvement.
+
+![After](https://i.imgur.com/6RNue8W.png)
 
 ---
 
@@ -33,7 +47,7 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 
 ## **Installation Instructions**  
 
-1. Download the ZIP file from the [latest release](https://github.com/Clourynth/game_cpusets/releases/download/v0.4/game_cpusets_v0.4.zip).  
+1. Download the ZIP file from the [latest release](https://github.com/Clourynth/game_cpusets/releases/download/v0.4/game_cpusets_v0.5.zip).  
 2. Install the module via **Magisk Manager**:  
    - Open Magisk Manager.  
    - Navigate to *Modules > Install from Storage*.  
@@ -80,10 +94,12 @@ Contributions are welcome! If you have suggestions, bug fixes, or new feature id
 
 ## **Credits**  
 - **Magisk:** A powerful systemless interface for Android that allows you to modify your system without altering the system partition.
-Magisk GitHub
 
 - **AOSP (Android Open Source Project):** The open-source initiative that forms the foundation of Android.
-AOSP GitHub
+
+- **ChatGPT:** Special thanks to ChatGPT for assisting in the development of this module.
+
+---
 
 ## **Support the Developer**  
 If you find this module helpful, consider supporting its development by donating:  

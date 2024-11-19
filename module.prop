@@ -1,8 +1,8 @@
 # module.prop
 id=game_cpusets
-name=Force CPU Performance Core for Gaming
-version=v0.4
-versionCode=4
+name=Game CPUsets
+version=v0.5
+versionCode=5
 author=Clourynth
 description=This module adjusts CPU affinity to ensure that games utilize only performance cores and set CPU governor to performance, increase more FPS. Designed for devices with 4+4 CPU clusters and requires support for Cpuset. You can add games to the list by editing the game_list.txt file located in /storage/emulated/0.
 updateJson=https://raw.githubusercontent.com/Clourynth/game_cpusets/main/update.json

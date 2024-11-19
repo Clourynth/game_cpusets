@@ -24,6 +24,10 @@ fi
 # Pastikan file memiliki izin yang tepat
 chmod 644 "$CONFIG_FILE"
 
+# Simpan nilai default cpusets
+DEFAULT_TOP_APP=$(cat /dev/cpuset/top-app/cpus)
+DEFAULT_FOREGROUND=$(cat /dev/cpuset/foreground/cpus)
+
 # Ambil nilai frekuensi maksimum dan minimum yang tersedia dari sistem
 DEFAULT_SMALL_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq)
 DEFAULT_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)

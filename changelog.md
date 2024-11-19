@@ -1,5 +1,3 @@
-# v0.4
+# v0.5
 
-- Set GPU clock to max
-- Fix CPU freq detection
-- Module now can updated using magisk manager
+- Fix reset CPU set
