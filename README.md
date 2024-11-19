@@ -20,7 +20,7 @@ Unlike many other gaming modules, this module does not rely on placebo effects; 
 - Improves responsiveness for a better gaming experience.
 
  ## **Notes**  
-This module will override changes made by other modules or the built-in OS performance/battery saver mode to CPU sets, frequency, and governor settings.
+This module will override changes made by other modules, apps or the built-in OS performance/battery saver mode to CPU sets, CPU & GPU frequency, and CPU governor settings.
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  

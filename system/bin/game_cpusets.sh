@@ -24,19 +24,30 @@ fi
 # Pastikan file memiliki izin yang tepat
 chmod 644 "$CONFIG_FILE"
 
-# Ambil nilai default dari sistem
-DEFAULT_TOP_APP=$(cat /dev/cpuset/top-app/cpus)
-DEFAULT_FOREGROUND=$(cat /dev/cpuset/foreground/cpus)
-DEFAULT_SMALL_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq)
-DEFAULT_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
-DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq)
-DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq)
+# Ambil nilai frekuensi maksimum dan minimum yang tersedia dari sistem
+DEFAULT_SMALL_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq)
+DEFAULT_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
+DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_min_freq)
+DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
+
+# GPU frekuensi (deteksi dari file freq_table_mhz jika tersedia)
+AVAILABLE_GPU_FREQS=$(cat /sys/class/kgsl/kgsl-3d0/freq_table_mhz)
+
+# Konversi daftar frekuensi GPU dari MHz jika tersedia
+if [ -n "$AVAILABLE_GPU_FREQS" ]; then
+    DEFAULT_GPU_FREQ_MIN=$(echo $AVAILABLE_GPU_FREQS | awk '{print $NF}')
+    DEFAULT_GPU_FREQ_MAX=$(echo $AVAILABLE_GPU_FREQS | awk '{print $1}')
+else
+    DEFAULT_GPU_FREQ_MIN="Unavailable"
+    DEFAULT_GPU_FREQ_MAX="Unavailable"
+fi
 
 # Nilai untuk konfigurasi game
 GAME_TOP_APP="4-7"
 GAME_FOREGROUND="0-4"
-GAME_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
-GAME_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
+GAME_SMALL_CORE_FREQ_MAX=$DEFAULT_SMALL_CORE_FREQ_MAX
+GAME_BIG_CORE_FREQ_MAX=$DEFAULT_BIG_CORE_FREQ_MAX
+GAME_GPU_FREQ_MAX=$DEFAULT_GPU_FREQ_MAX
 
 # Governor default
 DEFAULT_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
@@ -57,16 +68,32 @@ set_governor() {
     done
 }
 
-# Function to set maximum CPU frequency for gaming
+# Function to set maximum CPU and GPU frequencies for gaming
 set_max_freq() {
+    echo "$GAME_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
     echo "$GAME_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
     echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
+
+    # Set GPU frequencies using MHz format
+    if [ "$GAME_GPU_FREQ_MAX" != "Unavailable" ]; then
+        echo "$GAME_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/min_clock_mhz
+        echo "$GAME_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/max_clock_mhz
+    fi
 }
 
-# Function to reset CPU frequency to default
+# Function to reset CPU and GPU frequencies to default
 reset_freq() {
+    echo "$DEFAULT_SMALL_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
     echo "$DEFAULT_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    echo "$DEFAULT_BIG_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
     echo "$DEFAULT_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
+
+    # Reset GPU frequencies using MHz format
+    if [ "$DEFAULT_GPU_FREQ_MIN" != "Unavailable" ]; then
+        echo "$DEFAULT_GPU_FREQ_MIN" > /sys/class/kgsl/kgsl-3d0/min_clock_mhz
+        echo "$DEFAULT_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/max_clock_mhz
+    fi
 }
 
 # Fungsi untuk mengembalikan konfigurasi default
@@ -82,7 +109,7 @@ reset_governor() {
     done
 }
 
-# Monitor dan atur cpusets, governor, dan frekuensi CPU
+# Monitor dan atur cpusets, governor, dan frekuensi CPU serta GPU
 while true; do
     # Ambil nama aplikasi yang sedang berjalan
     TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
