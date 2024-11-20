@@ -31,8 +31,8 @@ DEFAULT_FOREGROUND=$(cat /dev/cpuset/foreground/cpus)
 # Ambil nilai frekuensi maksimum dan minimum yang tersedia dari sistem
 DEFAULT_SMALL_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq)
 DEFAULT_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
-DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_min_freq)
-DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
+DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu6/cpufreq/cpuinfo_min_freq)
+DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu6/cpufreq/cpuinfo_max_freq)
 
 # GPU frekuensi (deteksi dari file freq_table_mhz jika tersedia)
 AVAILABLE_GPU_FREQS=$(cat /sys/class/kgsl/kgsl-3d0/freq_table_mhz)
@@ -47,8 +47,8 @@ else
 fi
 
 # Nilai untuk konfigurasi game
-GAME_TOP_APP="4-7"
-GAME_FOREGROUND="0-4"
+GAME_TOP_APP="6-7"
+GAME_FOREGROUND="0-5"
 GAME_SMALL_CORE_FREQ_MAX=$DEFAULT_SMALL_CORE_FREQ_MAX
 GAME_BIG_CORE_FREQ_MAX=$DEFAULT_BIG_CORE_FREQ_MAX
 GAME_GPU_FREQ_MAX=$DEFAULT_GPU_FREQ_MAX
@@ -76,8 +76,8 @@ set_governor() {
 set_max_freq() {
     echo "$GAME_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
     echo "$GAME_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-    echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
+    echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_min_freq
+    echo "$GAME_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_max_freq
 
     # Set GPU frequencies using MHz format
     if [ "$GAME_GPU_FREQ_MAX" != "Unavailable" ]; then
@@ -90,8 +90,8 @@ set_max_freq() {
 reset_freq() {
     echo "$DEFAULT_SMALL_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
     echo "$DEFAULT_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    echo "$DEFAULT_BIG_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-    echo "$DEFAULT_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
+    echo "$DEFAULT_BIG_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_min_freq
+    echo "$DEFAULT_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu6/cpufreq/scaling_max_freq
 
     # Reset GPU frequencies using MHz format
     if [ "$DEFAULT_GPU_FREQ_MIN" != "Unavailable" ]; then
