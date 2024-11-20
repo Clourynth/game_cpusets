@@ -7,7 +7,7 @@ ui_print "*   Checking device compatibility... *"
 ui_print "**************************************"
 ui_print ""
 
-# Fungsi untuk memeriksa konfigurasi CPU cluster (4+4)
+# Fungsi untuk memeriksa konfigurasi CPU cluster (1+3+4)
 check_cpu_cluster() {
     # Ambil output dari file topology/physical_package_id
     CPU_CLUSTER=$(for i in /sys/devices/system/cpu/cpu*/topology/physical_package_id; do
@@ -26,15 +26,15 @@ check_cpu_cluster() {
     ui_print "  Cluster 3 Core Count: $CLUSTER_3_COUNT"
     ui_print ""
 
-    # Periksa apakah cluster 0 dan 1 masing-masing memiliki 4 core, dan cluster lainnya kosong
-    if [ "$CLUSTER_0_COUNT" -eq 4 ] && [ "$CLUSTER_1_COUNT" -eq 4 ] && \
-       [ "$CLUSTER_2_COUNT" -eq 0 ] && [ "$CLUSTER_3_COUNT" -eq 0 ]; then
-        ui_print "- Detected 4+4 CPU cluster configuration."
+    # Periksa apakah cluster 1+3+4
+    if [ "$CLUSTER_0_COUNT" -eq 4 ] && [ "$CLUSTER_1_COUNT" -eq 3 ] && \
+       [ "$CLUSTER_2_COUNT" -eq 1 ] && [ "$CLUSTER_3_COUNT" -eq 0 ]; then
+        ui_print "- Detected 1+3+4 CPU cluster configuration."
         return 0
     fi
 
     ui_print "! Unsupported CPU configuration."
-    ui_print "! This module requires a 4+4 CPU cluster."
+    ui_print "! This module requires a 1+3+4 CPU cluster."
     return 1
 }
 
