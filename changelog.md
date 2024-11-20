@@ -1,3 +1,4 @@
-# v0.5
+# v0.6
 
-- Fix reset CPU set
+FOR 4+4 CLUSTER UPDATE!
+- Fix background CPUsets
