@@ -40,7 +40,7 @@ Below is a comparison of FPS performance before and after enabling the Game CPUs
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  
-- Android device with a **4+4 CPU cluster configuration**.  
+- Android device with a **4+4,2+6 and 1+3+4 CPU cluster configuration**.  
 - Kernel support for **Cpuset**.  
 
 ---

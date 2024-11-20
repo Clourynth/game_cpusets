@@ -1,4 +1,4 @@
-# v0.5
+# v0.6
 
-- Fix reset CPU set
-- Test version for 1+3+4 Configuration
+FOR 1+3+4 CLUSTERS UPDATE!
+- Fix backgroud CPUset
