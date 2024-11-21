@@ -34,13 +34,14 @@ Below is a comparison of FPS performance before and after enabling the Game CPUs
 - Improves responsiveness for a better gaming experience.
 
  ## **Notes**  
+- *NOT RECOMMENDED* to use this module on CPUs without big/performance cores, such as the Snapdragon 625, as it may result in no performance improvement or even decreased performance.
 - This module will override changes made by other modules, applications, or the built-in OS performance or battery saver mode, including CPU sets, CPU and GPU frequencies, and CPU governor settings.
 - This module may reduce CPU scores in synthetic benchmark applications like AnTuTu or Geekbench, as these applications benchmark all cores, including the less powerful little cores that are not optimized for gaming.
 - This module will also cause the device to heat up quickly and consume more power while gaming. However, when not playing games, it will not significantly affect power consumption.
 
 ## **Requirements**  
 - **Magisk Manager** version 24.0 or higher required.  
-- Android device with a **4+4,2+6 and 1+3+4 CPU cluster configuration**.  
+- Android device with a **4+4, 2+4, 2+6 and 1+3+4 CPU cluster configuration**.  
 - Kernel support for **Cpuset**.  
 
 ---
