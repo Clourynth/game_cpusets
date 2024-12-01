@@ -1,0 +1,8 @@
+# config/app_list.txt
+
+# Note: Apps added to this list will make the CPU more efficient, power-saving, and result in lower CPU temperature, but at the cost of significantly reduced performance.
+
+# Add app package names below:
+com.google.android.youtube
+com.facebook.katana
+com.instagram.android

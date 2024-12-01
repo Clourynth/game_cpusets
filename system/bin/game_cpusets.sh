@@ -1,28 +1,39 @@
 #!/system/bin/sh
 
-# Path ke file config di internal storage
-CONFIG_FILE="/data/media/0/game_list.txt"
+# Path ke file konfigurasi
+GAME_CONFIG="/data/media/0/game_list.txt"
+MODULE_GAME_CONFIG="/data/adb/modules/game_cpusets/config/game_list.txt"
 
-# Path file config asli di modul
-MODULE_CONFIG_FILE="/data/adb/modules/game_cpusets/config/game_list.txt"
+APP_CONFIG="/data/media/0/app_list.txt"
+MODULE_APP_CONFIG="/data/adb/modules/game_cpusets/config/app_list.txt"
 
-# Path ke file buggy game list
+# Path ke file buggy game list (khusus game, tidak digabungkan)
 BUGGY_GAME_FILE="/data/adb/modules/game_cpusets/config/buggy_game_implementation_list.txt"
 
-# Periksa jika file config tidak ada di internal storage
-if [ ! -f "$CONFIG_FILE" ]; then
-    if [ -f "$MODULE_CONFIG_FILE" ]; then
-        # Salin file config dari modul ke internal storage
-        cp "$MODULE_CONFIG_FILE" "$CONFIG_FILE"
-        echo "File config disalin ke $CONFIG_FILE"
-    else
-        echo "File config modul tidak ditemukan!"
-        touch "$CONFIG_FILE" # Buat file kosong jika file asli tidak ada
-    fi
-fi
+# Fungsi untuk memastikan file konfigurasi ada
+ensure_config_file() {
+    local INTERNAL_CONFIG="$1"
+    local MODULE_CONFIG="$2"
+    local CONFIG_NAME="$3"
 
-# Pastikan file memiliki izin yang tepat
-chmod 644 "$CONFIG_FILE"
+    # Periksa jika file config tidak ada di internal storage
+    if [ ! -f "$INTERNAL_CONFIG" ]; then
+        if [ -f "$MODULE_CONFIG" ]; then
+            # Salin file config dari modul ke internal storage
+            cp "$MODULE_CONFIG" "$INTERNAL_CONFIG"
+            chmod 644 "$INTERNAL_CONFIG"  # Set permissions after copying
+            echo "File config $CONFIG_NAME disalin ke $INTERNAL_CONFIG"
+        else
+            echo "File config $CONFIG_NAME modul tidak ditemukan!"
+            touch "$INTERNAL_CONFIG" # Buat file kosong jika file asli tidak ada
+            chmod 644 "$INTERNAL_CONFIG"  # Set permissions for the empty file
+        fi
+    fi
+}
+
+# Pastikan file konfigurasi ada
+ensure_config_file "$GAME_CONFIG" "$MODULE_GAME_CONFIG" "game"
+ensure_config_file "$APP_CONFIG" "$MODULE_APP_CONFIG" "app"
 
 # Simpan nilai default cpusets
 DEFAULT_TOP_APP=$(cat /dev/cpuset/top-app/cpus)
@@ -33,6 +44,10 @@ DEFAULT_SMALL_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_m
 DEFAULT_SMALL_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
 DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_min_freq)
 DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
+
+# Ambil nilai frekuensi khusus untuk aplikasi hemat daya
+ENERGY_SAVING_SMALL_CORE_FREQ_MAX=$(awk '{print $3}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies)
+ENERGY_SAVING_BIG_CORE_FREQ_MAX=$(awk '{print $1}' /sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies)
 
 # GPU frekuensi (deteksi dari file freq_table_mhz jika tersedia)
 AVAILABLE_GPU_FREQS=$(cat /sys/class/kgsl/kgsl-3d0/freq_table_mhz)
@@ -49,15 +64,19 @@ fi
 # Nilai untuk konfigurasi game
 GAME_TOP_APP="4-7"
 GAME_FOREGROUND="0-3"
+
 GAME_SMALL_CORE_FREQ_MAX=$DEFAULT_SMALL_CORE_FREQ_MAX
 GAME_BIG_CORE_FREQ_MAX=$DEFAULT_BIG_CORE_FREQ_MAX
 GAME_GPU_FREQ_MAX=$DEFAULT_GPU_FREQ_MAX
 
+GAME_GOVERNOR="performance"
+
+# Nilai untuk konfigurasi energy-saving app
+ENERGY_SAVING_TOP_APP="4-7"
+ENERGY_SAVING_FOREGROUND="0-3"
+
 # Governor default
 DEFAULT_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
-
-# Governor performance
-GAME_GOVERNOR="performance"
 
 # Function to set cpusets
 set_cpusets() {
@@ -83,6 +102,19 @@ set_max_freq() {
     if [ "$GAME_GPU_FREQ_MAX" != "Unavailable" ]; then
         echo "$GAME_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/min_clock_mhz
         echo "$GAME_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/max_clock_mhz
+    fi
+}
+
+set_powersave_freq() {
+    echo "$DEFAULT_SMALL_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+    echo "$ENERGY_SAVING_SMALL_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    echo "$DEFAULT_BIG_CORE_FREQ_MIN" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
+    echo "$ENERGY_SAVING_BIG_CORE_FREQ_MAX" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
+
+    # Reset GPU frequencies using MHz format
+    if [ "$DEFAULT_GPU_FREQ_MIN" != "Unavailable" ]; then
+        echo "$DEFAULT_GPU_FREQ_MIN" > /sys/class/kgsl/kgsl-3d0/min_clock_mhz
+        echo "$DEFAULT_GPU_FREQ_MAX" > /sys/class/kgsl/kgsl-3d0/max_clock_mhz
     fi
 }
 
@@ -114,32 +146,57 @@ reset_governor() {
 }
 
 # Monitor dan atur cpusets, governor, dan frekuensi CPU serta GPU
+PREVIOUS_APP=""
+IS_CONFIG_APPLIED=false
+
 while true; do
     # Ambil nama aplikasi yang sedang berjalan
     TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
 
     # Periksa apakah game ada di buggy game list
     IS_BUGGY=false
-    if grep -q "$TOP_APP" "$BUGGY_GAME_FILE" && grep -q "$TOP_APP" "$CONFIG_FILE"; then
+    if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
         IS_BUGGY=true
         echo "Buggy game detected: $TOP_APP"
     fi
 
     # Jika aplikasi dalam config adalah game
-    if grep -q "$TOP_APP" "$CONFIG_FILE"; then
-        if [ "$IS_BUGGY" = true ]; then
-            echo "Waiting 15 seconds before applying settings for buggy game: $TOP_APP"
-            sleep 15
+    if grep -q "$TOP_APP" "$GAME_CONFIG"; then
+        # Jika aplikasi yang berjalan berubah atau belum diterapkan
+        if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+            if [ "$IS_BUGGY" = true ]; then
+                echo "Waiting 15 seconds before applying settings for buggy game: $TOP_APP"
+                sleep 15
+            fi
+            echo "Applying settings for game: $TOP_APP"
+            set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
+            set_governor "$GAME_GOVERNOR"
+            set_max_freq
+            IS_CONFIG_APPLIED=true
         fi
-        set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
-        set_governor "$GAME_GOVERNOR"
-        set_max_freq
+    # Jika aplikasi dalam config adalah app energy-saving
+    elif grep -q "$TOP_APP" "$APP_CONFIG"; then
+        # Jika aplikasi yang berjalan berubah atau belum diterapkan
+        if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+            echo "Applying settings for energy-saving app: $TOP_APP"
+            set_cpusets "$ENERGY_SAVING_TOP_APP" "$ENERGY_SAVING_FOREGROUND"
+            reset_governor
+            set_powersave_freq
+            IS_CONFIG_APPLIED=true
+        fi
     else
-        # Jika bukan game, kembalikan ke pengaturan default
-        reset_cpusets
-        reset_governor
-        reset_freq
+        # Jika aplikasi bukan game atau app, reset konfigurasi
+        if [ "$IS_CONFIG_APPLIED" = true ]; then
+            echo "Resetting settings for non-game/non-app: $TOP_APP"
+            reset_cpusets
+            reset_governor
+            reset_freq
+            IS_CONFIG_APPLIED=false
+        fi
     fi
+
+    # Simpan aplikasi yang sedang berjalan untuk perbandingan pada iterasi berikutnya
+    PREVIOUS_APP="$TOP_APP"
 
     # Tunggu sebelum iterasi berikutnya
     sleep 2

@@ -1,5 +1,7 @@
 # config/game_list.txt
 
+# Note: Apps added to this list will make the CPU faster, resulting in higher performance, but will cause higher power consumption and increased CPU temperature.
+
 # Add game package names below:
 com.miHoYo.GenshinImpact
 com.tencent.ig
