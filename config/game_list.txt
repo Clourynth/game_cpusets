@@ -1,6 +1,6 @@
 # config/game_list.txt
 
-# Note: Apps added to this list will make the CPU faster, resulting in higher performance, but will cause higher power consumption and increased CPU temperature. Games will be forced to use only performance cores for optimal performance.
+# Note: Apps added to this list will make the CPU faster, resulting in higher performance, but will cause higher power consumption and increased CPU temperature. Games will be forced to use only performance cores for optimal performance. Additionally, apps added here will also have higher tolerance during active charging protection to ensure sufficient performance and safer temperature levels.
 
 # Add game package names below:
 com.miHoYo.GenshinImpact
