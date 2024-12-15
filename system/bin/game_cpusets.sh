@@ -1,5 +1,42 @@
 #!/system/bin/sh
 
+# Fungsi Logging
+log_message() {
+    local message="$1"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Pastikan file log dapat ditulis
+    if [ ! -w "$LOG_FILE" ]; then
+        echo "[$timestamp] ERROR: Cannot write to log file $LOG_FILE" >&2
+        return
+    fi
+    
+    # Tulis pesan log
+    echo "[$timestamp] $message" >> "$LOG_FILE"
+}
+
+
+LOG_FILE="/data/media/0/g-cpu.log"
+
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE"
+    chmod 666 "$LOG_FILE"
+    log_message "Log file created at $LOG_FILE"
+fi
+
+MAX_LOG_SIZE=1048576 # 1MB
+
+rotate_logs() {
+    local file_size=$(stat -c%s "$LOG_FILE")
+    if [ "$file_size" -gt "$MAX_LOG_SIZE" ]; then
+        # Hapus file log lama
+        rm "$LOG_FILE"
+        # Buat file log baru
+        touch "$LOG_FILE"
+        log_message "Log file rotated. Old log discarded."
+    fi
+}
+
 # Path ke file konfigurasi
 GAME_CONFIG="/data/media/0/game_list.txt"
 MODULE_GAME_CONFIG="/data/adb/modules/game_cpusets/config/game_list.txt"
@@ -46,7 +83,7 @@ DEFAULT_BIG_CORE_FREQ_MIN=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_min
 DEFAULT_BIG_CORE_FREQ_MAX=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
 
 # Ambil nilai frekuensi khusus untuk aplikasi hemat daya
-ENERGY_SAVING_SMALL_CORE_FREQ_MAX=$(awk '{print $NF}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies)
+ENERGY_SAVING_SMALL_CORE_FREQ_MAX=$(awk '{print $4}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies)
 ENERGY_SAVING_BIG_CORE_FREQ_MAX=$(awk '{print $1}' /sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies)
 
 # Ambil nilai frekuensi khusus untuk proteksi baterai saat di-charge + gaming
@@ -66,21 +103,24 @@ else
 fi
 
 # Nilai untuk konfigurasi game
+
+# Konfigurasi Cpusets game kondisi charging & not charging
 GAME_TOP_APP="4-7"
 GAME_FOREGROUND="0-3"
 
+# Konfigurasi freq & governor kondisi not charging
 GAME_SMALL_CORE_FREQ_MAX=$DEFAULT_SMALL_CORE_FREQ_MAX
 GAME_BIG_CORE_FREQ_MAX=$DEFAULT_BIG_CORE_FREQ_MAX
 GAME_GPU_FREQ_MAX=$DEFAULT_GPU_FREQ_MAX
 
 GAME_GOVERNOR="performance"
 
-# Nilai untuk konfigurasi energy-saving app
+# Konfigurasi Cpusets energy-saving app
 ENERGY_SAVING_TOP_APP="0-7"
 ENERGY_SAVING_FOREGROUND="0-3"
 
-# Nilai untuk konfigurasi charging
-CHARGING_TOP_APP="0-3"
+# Konfigurasi Cpusets charging
+CHARGING_TOP_APP="0-5"
 CHARGING_FOREGROUND="0-3"
 
 # Governor default
@@ -200,37 +240,41 @@ PREVIOUS_APP=""
 CHARGING_STATE=""
 IS_CONFIG_APPLIED=false
 
+loop_counter=0
+LOG_INTERVAL=10
+
+# Jeda setelah booting agar tidak menghambat kecepatan startup OS
+sleep 30
+
 while true; do
+    # Memanggil rotate_logs setiap LOG_INTERVAL detik
+    if (( loop_counter % LOG_INTERVAL == 0 )); then
+        rotate_logs
+    fi
+    ((loop_counter++))
+    
     # Periksa apakah perangkat sedang diisi daya
     if is_charging; then
-        if [ "$CHARGING_STATE" != "Charging" ]; then
-            echo "Device is charging. Applying power-saving settings."
-            set_cpusets "$CHARGING_TOP_APP" "$CHARGING_FOREGROUND"
-            reset_governor
-            set_powersave_freq
-            CHARGING_STATE="Charging"
-            IS_CONFIG_APPLIED=false # Reset status aplikasi
-        fi
-        
         # Ambil aplikasi yang sedang berjalan
         TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
         
-        # Kondisi saat charging dan aplikasi adalah game
+        # Prioritaskan kondisi game saat charging
         if grep -q "$TOP_APP" "$GAME_CONFIG"; then
             if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                echo "Charging: Applying battery-protect settings for game: $TOP_APP"
+                log_message "Charging: Applying battery protection for game: $TOP_APP"
                 set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
                 reset_governor
                 set_safe_freq
                 IS_CONFIG_APPLIED=true
             fi
         else
-            # Jika keluar dari game, reset pengaturan
-            if [ "$IS_CONFIG_APPLIED" = true ]; then
-                echo "Device is charging. Applying power-saving settings."
+            # Jika bukan game, terapkan pengaturan charging default
+            if [ "$CHARGING_STATE" != "Charging" ] || [ "$IS_CONFIG_APPLIED" = true ]; then
+                log_message "Device is charging. Applying battery protection settings."
                 set_cpusets "$CHARGING_TOP_APP" "$CHARGING_FOREGROUND"
                 reset_governor
                 set_powersave_freq
+                CHARGING_STATE="Charging"
                 IS_CONFIG_APPLIED=false
             fi
         fi
@@ -239,18 +283,36 @@ while true; do
         BATTERY_LEVEL=$(get_battery_level)
         
         if [ "$BATTERY_LEVEL" -lt 20 ]; then
-            # Jika baterai di bawah 20%, terapkan proteksi baterai
-            if [ "$CHARGING_STATE" != "Low Battery" ]; then
-                echo "Battery low ($BATTERY_LEVEL%). Applying power-saving settings."
-                set_cpusets "$CHARGING_TOP_APP" "$CHARGING_FOREGROUND"
-                reset_governor
-                set_powersave_freq
-                CHARGING_STATE="Low Battery"
-                IS_CONFIG_APPLIED=false # Reset status aplikasi
+            # Ambil aplikasi yang sedang berjalan
+            TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
+            
+            # Prioritaskan kondisi game saat Low Battery
+            if grep -q "$TOP_APP" "$GAME_CONFIG"; then
+                if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+                    log_message "Battery low ($BATTERY_LEVEL%). Applying battery protection for game: $TOP_APP"
+                    set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
+                    reset_governor
+                    set_safe_freq
+                    IS_CONFIG_APPLIED=true
+                fi
+            else
+                # Jika bukan game, terapkan pengaturan hemat daya
+                if [ "$CHARGING_STATE" != "Low Battery" ] || [ "$IS_CONFIG_APPLIED" = true ]; then
+                    log_message "Battery low ($BATTERY_LEVEL%). Applying power-saving settings."
+                    set_cpusets "$ENERGY_SAVING_TOP_APP" "$ENERGY_SAVING_FOREGROUND"
+                    reset_governor
+                    set_powersave_freq
+                    CHARGING_STATE="Low Battery"
+                    IS_CONFIG_APPLIED=false
+                fi
             fi
+            
+            # Hentikan iterasi untuk prioritas low battery
+            sleep 2
+            continue
         else
             if [ "$CHARGING_STATE" != "Not Charging" ]; then
-                echo "Device is not charging. Resetting to normal mode."
+                log_message "Battery level is sufficient ($BATTERY_LEVEL%). Device is not charging. Resetting to normal mode."
                 reset_cpusets
                 reset_governor
                 reset_freq
@@ -266,17 +328,17 @@ while true; do
         IS_BUGGY=false
         if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
             IS_BUGGY=true
-            echo "Buggy game detected: $TOP_APP"
+            log_message "Buggy game detected: $TOP_APP"
         fi
         
         # Kondisi Tidak charging dan aplikasi adalah game
         if grep -q "$TOP_APP" "$GAME_CONFIG"; then
             if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
                 if [ "$IS_BUGGY" = true ]; then
-                    echo "Waiting 15 seconds for buggy game: $TOP_APP"
+                    log_message "Waiting 15 seconds for buggy game: $TOP_APP"
                     sleep 15
                 fi
-                echo "Not Charging: Applying performance settings for game: $TOP_APP"
+                log_message "Not Charging: Applying performance settings for game: $TOP_APP"
                 set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
                 set_governor "$GAME_GOVERNOR"
                 set_max_freq
@@ -293,20 +355,20 @@ while true; do
                 if [ "$NEW_TOP_APP" = "$TOP_APP" ]; then
                     # Jika aplikasi tetap sama, terapkan pengaturan
                     if [ "$PREVIOUS_APP" != "$NEW_TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                        echo "Not Charging: Applying settings for energy-saving app: $NEW_TOP_APP"
+                        log_message "Not Charging: Applying settings for energy-saving app: $NEW_TOP_APP"
                         set_cpusets "$ENERGY_SAVING_TOP_APP" "$ENERGY_SAVING_FOREGROUND"
                         reset_governor
                         set_powersave_freq
                         IS_CONFIG_APPLIED=true
                     fi
                 else
-                    echo "Application changed during delay, skipping power-saving settings."
+                    log_message "Application changed during delay, skipping power-saving settings."
                 fi
             fi
         else
             # Kondisi Tidak charging dan aplikasi bukan game atau aplikasi hemat daya
             if [ "$IS_CONFIG_APPLIED" = true ]; then
-                echo "Not Charging: Resetting settings for non-game/non-app: $TOP_APP"
+                log_message "Not Charging: Resetting settings for non-game/non-app: $TOP_APP"
                 reset_cpusets
                 reset_governor
                 reset_freq
