@@ -289,7 +289,7 @@ while true; do
             # Prioritaskan kondisi game saat Low Battery
             if grep -q "$TOP_APP" "$GAME_CONFIG"; then
                 if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                    log_message "Battery low ($BATTERY_LEVEL%). Applying battery protection for game: $TOP_APP"
+                    log_message "Battery low ($BATTERY_LEVEL%). Applying battery power saving for game: $TOP_APP"
                     set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
                     reset_governor
                     set_safe_freq
@@ -306,10 +306,6 @@ while true; do
                     IS_CONFIG_APPLIED=false
                 fi
             fi
-            
-            # Hentikan iterasi untuk prioritas low battery
-            sleep 2
-            continue
         else
             if [ "$CHARGING_STATE" != "Not Charging" ]; then
                 log_message "Battery level is sufficient ($BATTERY_LEVEL%). Device is not charging. Resetting to normal mode."
@@ -319,62 +315,61 @@ while true; do
                 CHARGING_STATE="Not Charging"
                 IS_CONFIG_APPLIED=false # Reset status aplikasi
             fi
-        fi
-        
-        # Ambil aplikasi yang sedang berjalan
-        TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
-        
-        # Periksa apakah aplikasi adalah game
-        IS_BUGGY=false
-        if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
-            IS_BUGGY=true
-            log_message "Buggy game detected: $TOP_APP"
-        fi
-        
-        # Kondisi Tidak charging dan aplikasi adalah game
-        if grep -q "$TOP_APP" "$GAME_CONFIG"; then
-            if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                if [ "$IS_BUGGY" = true ]; then
-                    log_message "Waiting 15 seconds for buggy game: $TOP_APP"
-                    sleep 15
-                fi
-                log_message "Not Charging: Applying performance settings for game: $TOP_APP"
-                set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
-                set_governor "$GAME_GOVERNOR"
-                set_max_freq
-                IS_CONFIG_APPLIED=true
+            # Ambil aplikasi yang sedang berjalan
+            TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
+            
+            # Periksa apakah aplikasi adalah game
+            IS_BUGGY=false
+            if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
+                IS_BUGGY=true
+                log_message "Buggy game detected: $TOP_APP"
             fi
-            elif grep -q "$TOP_APP" "$APP_CONFIG"; then
-            # Kondisi Tidak charging dan aplikasi hemat daya
-            if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                # Berikan jeda 10 detik agar tidak menghambat waktu buka aplikasi
-                sleep 10
-                NEW_TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
-                
-                # Periksa apakah aplikasi tetap sama setelah jeda
-                if [ "$NEW_TOP_APP" = "$TOP_APP" ]; then
-                    # Jika aplikasi tetap sama, terapkan pengaturan
-                    if [ "$PREVIOUS_APP" != "$NEW_TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                        log_message "Not Charging: Applying settings for energy-saving app: $NEW_TOP_APP"
-                        set_cpusets "$ENERGY_SAVING_TOP_APP" "$ENERGY_SAVING_FOREGROUND"
-                        reset_governor
-                        set_powersave_freq
-                        IS_CONFIG_APPLIED=true
+            
+            # Kondisi Tidak charging dan aplikasi adalah game
+            if grep -q "$TOP_APP" "$GAME_CONFIG"; then
+                if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+                    if [ "$IS_BUGGY" = true ]; then
+                        log_message "Waiting 15 seconds for buggy game: $TOP_APP"
+                        sleep 15
                     fi
-                else
-                    log_message "Application changed during delay, skipping power-saving settings."
+                    log_message "Not Charging: Applying performance settings for game: $TOP_APP"
+                    set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
+                    set_governor "$GAME_GOVERNOR"
+                    set_max_freq
+                    IS_CONFIG_APPLIED=true
+                fi
+                elif grep -q "$TOP_APP" "$APP_CONFIG"; then
+                # Kondisi Tidak charging dan aplikasi hemat daya
+                if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+                    # Berikan jeda 10 detik agar tidak menghambat waktu buka aplikasi
+                    sleep 10
+                    NEW_TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
+                    
+                    # Periksa apakah aplikasi tetap sama setelah jeda
+                    if [ "$NEW_TOP_APP" = "$TOP_APP" ]; then
+                        # Jika aplikasi tetap sama, terapkan pengaturan
+                        if [ "$PREVIOUS_APP" != "$NEW_TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+                            log_message "Not Charging: Applying settings for energy-saving app: $NEW_TOP_APP"
+                            set_cpusets "$ENERGY_SAVING_TOP_APP" "$ENERGY_SAVING_FOREGROUND"
+                            reset_governor
+                            set_powersave_freq
+                            IS_CONFIG_APPLIED=true
+                        fi
+                    else
+                        log_message "Application changed during delay, skipping power-saving settings."
+                    fi
+                fi
+            else
+                # Kondisi Tidak charging dan aplikasi bukan game atau aplikasi hemat daya
+                if [ "$IS_CONFIG_APPLIED" = true ]; then
+                    log_message "Not Charging: Resetting settings for non-game/non-app: $TOP_APP"
+                    reset_cpusets
+                    reset_governor
+                    reset_freq
+                    IS_CONFIG_APPLIED=false
                 fi
             fi
-        else
-            # Kondisi Tidak charging dan aplikasi bukan game atau aplikasi hemat daya
-            if [ "$IS_CONFIG_APPLIED" = true ]; then
-                log_message "Not Charging: Resetting settings for non-game/non-app: $TOP_APP"
-                reset_cpusets
-                reset_governor
-                reset_freq
-                IS_CONFIG_APPLIED=false
-            fi
-        fi
+        fi     
     fi
     
     # Simpan aplikasi yang sedang berjalan untuk perbandingan pada iterasi berikutnya
