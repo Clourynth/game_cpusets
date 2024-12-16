@@ -1,7 +1,7 @@
 # module.prop
 id=game_cpusets
 name=G-CPUsets
-version=v0.7.16-canary
+version=v0.7.17-canary
 versionCode=7
 author=Clourynth
 description=This module adjusts CPU affinity, GPU, and CPU clocks to optimize performance or conserve power for selected applications. It also includes charging protection and is optimized for 4+4 CPU cluster configurations.

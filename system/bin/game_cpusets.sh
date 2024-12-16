@@ -318,17 +318,12 @@ while true; do
             # Ambil aplikasi yang sedang berjalan
             TOP_APP=$(dumpsys activity activities | grep "topResumedActivity" | awk -F '/' '{print $1}' | awk '{print $NF}')
             
-            # Periksa apakah aplikasi adalah game
-            IS_BUGGY=false
-            if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
-                IS_BUGGY=true
-                log_message "Buggy game detected: $TOP_APP"
-            fi
-            
             # Kondisi Tidak charging dan aplikasi adalah game
             if grep -q "$TOP_APP" "$GAME_CONFIG"; then
                 if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
-                    if [ "$IS_BUGGY" = true ]; then
+                    # Periksa apakah aplikasi adalah game buggy
+                    if grep -q "$TOP_APP" "$BUGGY_GAME_FILE"; then
+                        log_message "Buggy game detected: $TOP_APP"
                         log_message "Waiting 15 seconds for buggy game: $TOP_APP"
                         sleep 15
                     fi
@@ -369,7 +364,7 @@ while true; do
                     IS_CONFIG_APPLIED=false
                 fi
             fi
-        fi     
+        fi
     fi
     
     # Simpan aplikasi yang sedang berjalan untuk perbandingan pada iterasi berikutnya
