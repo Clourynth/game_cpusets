@@ -260,22 +260,24 @@ while true; do
         
         # Prioritaskan kondisi game saat charging
         if grep -q "$TOP_APP" "$GAME_CONFIG"; then
-            if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ]; then
+            # Jika aplikasi adalah game
+            if [ "$PREVIOUS_APP" != "$TOP_APP" ] || [ "$IS_CONFIG_APPLIED" = false ] || [ "$CHARGING_STATE" != "Charging" ]; then
                 log_message "Charging: Applying battery protection for game: $TOP_APP"
                 set_cpusets "$GAME_TOP_APP" "$GAME_FOREGROUND"
                 reset_governor
                 set_safe_freq
                 IS_CONFIG_APPLIED=true
+                CHARGING_STATE="Charging"
             fi
         else
-            # Jika bukan game, terapkan pengaturan charging default
-            if [ "$CHARGING_STATE" != "Charging" ] || [ "$IS_CONFIG_APPLIED" = true ]; then
-                log_message "Device is charging. Applying battery protection settings."
+            # Jika bukan game
+            if [ "$CHARGING_STATE" != "Charging" ] || [ "$IS_CONFIG_APPLIED" = true ] || [ "$PREVIOUS_APP" != "$TOP_APP" ]; then
+                log_message "Device is charging. Applying default charging settings for non-game app: $TOP_APP"
                 set_cpusets "$CHARGING_TOP_APP" "$CHARGING_FOREGROUND"
                 reset_governor
                 set_powersave_freq
-                CHARGING_STATE="Charging"
                 IS_CONFIG_APPLIED=false
+                CHARGING_STATE="Charging"
             fi
         fi
     else
